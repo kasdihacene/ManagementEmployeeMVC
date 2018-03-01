@@ -1,0 +1,98 @@
+﻿
+@{
+    ViewBag.Title = "Employee List";
+}
+
+<h2>Employee CRUD Operations</h2>
+<a class="btn btn-default" style="margin-bottom:10px;" onclick="PopupForm('@Url.Action("AddOrEdit","Employee")')">
+    <i class="fa fa-user-plus"></i> New Employee
+</a>
+<table id="employeeTable" class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Office</th>
+            <th>Age</th>
+            <th>Salary</th>
+        </tr>
+    </thead>
+</table>
+
+<link href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+
+@section scripts{
+
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+
+    <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
+    <script>
+        var Popup, dataTable;
+
+        $(document).ready(function () {
+            dataTable = $("#employeeTable").DataTable({
+                "ajax": {
+                    "url": "/Employee/GetData",
+                    "type": "GET",
+                    "datatype": "json"
+                },
+                "columns":
+                [
+                    { "data": "Name" },
+                    { "data": "Position" },
+                    { "data": "Office" },
+                    { "data": "Age" },
+                    { "data": "Salary" }
+                ],
+                "language": {
+                    "emptyTable": "No data found, please click on <b>Add Employee</b> Button."
+                }
+            });
+        });
+
+        // used to display a view returned by the controller (AddOrEdit) on the popup
+        function PopupForm(url) {
+            var formDiv = $('<div/>');
+            // fetch data from controller
+            $.get(url).done(function (response) {
+                formDiv.html(response);
+
+                Popup = formDiv.dialog({
+                    autoOpen: true,
+                    resizable: false,
+                    title: "Fill Employee Details",
+                    height: 500,
+                    width: 700,
+                    close: function () {
+                        Popup.dialog('destroy').remove();
+                    }
+                });
+            });
+        }
+
+        function SubmitForm(form) {
+            $.validator.unobtrusive.parse(form);
+
+            if ($(form).valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: form.action,
+                    data: $(form).serialize(),
+                    success: function (data) {
+                        if (data.success) {
+                            Popup.dialog("close");
+                            dataTable.ajax.reload();
+                        }
+                    }
+                });
+            }
+            return false;
+        }
+    </script>
+}
+
+
